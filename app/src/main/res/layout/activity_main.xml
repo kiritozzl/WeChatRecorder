@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.example.kirito.videorecorder.MainActivity">
+
+    <ListView
+        android:id="@+id/lv"
+        android:divider="@null"
+        android:layout_width="match_parent"
+        android:layout_weight="1"
+        android:layout_height="0dp"/>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <View
+            android:layout_width="match_parent"
+            android:background="#ccc"
+            android:layout_height="2dp"/>
+
+        <com.example.kirito.videorecorder.support.RecorderButton
+            android:id="@+id/btn"
+            android:textSize="20sp"
+            android:textColor="#3e3434"
+            android:background="@drawable/btn_normal_background"
+            android:text="@string/btn_state_normal"
+            android:layout_marginLeft="50dp"
+            android:layout_marginRight="50dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="7dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+
+
+</LinearLayout>
