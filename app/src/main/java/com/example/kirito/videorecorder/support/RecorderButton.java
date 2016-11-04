@@ -1,7 +1,11 @@
 package com.example.kirito.videorecorder.support;
 
 import android.content.Context;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
@@ -20,7 +24,29 @@ public class RecorderButton extends Button {
     private int cur_state;
 
     private DialogManager mDialogManager;
+    //是否初始化了mediarecord
     private boolean isRecording;
+
+    private AudioManager mAudioManager;
+
+    private static final int MSG_AUDIO_PREPARED = 0x110;
+    private static final int MSG_VOICE_CHANGE = 0x111;
+    private static final int MSG_DIALOG_DISMISS = 0x112;
+
+    private float mTime;
+    //是否触发onLongClick
+    private boolean isLongClick;
+    private audioFinishedListener mListener;
+
+    private static final String TAG = "RecorderButton";
+
+    public void setAudioFinishedListener(audioFinishedListener listener){
+        mListener = listener;
+    }
+
+    public interface audioFinishedListener{
+        void onFinishedRecord(float seconds,String filePath);
+    }
 
     public RecorderButton(Context context) {
         this(context,null);
@@ -31,16 +57,61 @@ public class RecorderButton extends Button {
         cur_state = BTN_STATE_NORMAL;
 
         mDialogManager = new DialogManager(context);
+
+        mAudioManager = AudioManager.getInstance(Environment.getExternalStorageDirectory() + "/imooc_zzl");
+        mAudioManager.setAudioStateListener(new AudioManager.audioStateListener() {
+            @Override
+            public void audioPrepared() {
+                mHandler.sendEmptyMessage(MSG_AUDIO_PREPARED);
+            }
+        });
+
         setOnLongClickListener(new OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                //在mediarecorder 初始化之后
-                mDialogManager.showDialog();
-                isRecording = true;
+                isLongClick = true;
+                mAudioManager.audioPrepare();
                 return false;
             }
         });
     }
+
+    private Runnable mGetVoiceLevel = new Runnable() {
+        @Override
+        public void run() {
+            //不加while循环线程无法持续下去，同时导致无法记录音量的实时更新
+            while (isRecording){
+                try {
+                    Thread.sleep(100);
+                    mTime += 0.1;
+                    mHandler.sendEmptyMessage(MSG_VOICE_CHANGE);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    };
+
+    private Handler mHandler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what){
+                case MSG_AUDIO_PREPARED:
+                    //在mediarecorder 初始化之后
+                    mDialogManager.showDialog();
+                    isRecording = true;
+
+                    new Thread(mGetVoiceLevel).start();
+                    break;
+                case MSG_VOICE_CHANGE:
+                    mDialogManager.setVoiceLevel(mAudioManager.getVoiceLevel(7));
+                    break;
+                case MSG_DIALOG_DISMISS:
+                    mDialogManager.dismissDialog();
+                    break;
+            }
+        }
+    };
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -50,23 +121,37 @@ public class RecorderButton extends Button {
 
         switch (action){
             case MotionEvent.ACTION_DOWN:
-                if (cur_state == BTN_STATE_NORMAL){
-                    changeButtonState(BTN_STATE_RECORDING);
-                }
+                changeButtonState(BTN_STATE_RECORDING);
                 break;
             case MotionEvent.ACTION_UP:
-                if (cur_state == BTN_STATE_CANCEL){
-
+                Log.e(TAG, "onTouchEvent: mTime---"+mTime );
+                if (!isLongClick){
+                    reset();
+                    return super.onTouchEvent(event);
+                }else if (!isRecording || mTime < 0.6f){
+                    Log.e(TAG, "onTouchEvent:tooshort mTime---"+mTime );
+                    Log.e(TAG, "onTouchEvent: mDialogManager---"+mDialogManager.toString() );
+                    mDialogManager.tooShort();
+                    mAudioManager.cancelAudio();
+                    mHandler.sendEmptyMessageDelayed(MSG_DIALOG_DISMISS,6300);
+                }
+                else if (cur_state == BTN_STATE_CANCEL){
+                    mDialogManager.dismissDialog();
+                    mAudioManager.cancelAudio();
                 }else if (cur_state == BTN_STATE_RECORDING){
                     //TODO获取录制好的音频
-
+                    mDialogManager.dismissDialog();
+                    mAudioManager.releaseAudio();
+                    if (mListener != null){
+                        mListener.onFinishedRecord(mTime,mAudioManager.getFilePath());
+                    }
                 }
                 reset();
                 break;
             case MotionEvent.ACTION_MOVE:
                 if (wantToCancel(x,y)){
                     changeButtonState(BTN_STATE_CANCEL);
-                }else {
+                }else if (!wantToCancel(x,y)){
                     changeButtonState(BTN_STATE_RECORDING);
                 }
                 break;
@@ -108,6 +193,8 @@ public class RecorderButton extends Button {
 
     public void reset(){
         isRecording = false;
+        isLongClick = false;
+        mTime = 0;
         setBackgroundResource(R.drawable.btn_normal_background);
         setText(R.string.btn_state_normal);
         cur_state = BTN_STATE_NORMAL;

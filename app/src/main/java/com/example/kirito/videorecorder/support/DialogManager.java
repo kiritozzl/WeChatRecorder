@@ -2,6 +2,7 @@ package com.example.kirito.videorecorder.support;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
@@ -18,6 +19,8 @@ public class DialogManager {
     private Context mContext;
     private ImageView iv_icon,iv_voice;
     private TextView tv;
+
+    private static final String TAG = "DialogManager";
 
     public DialogManager(Context mContext) {
         this.mContext = mContext;
@@ -56,11 +59,13 @@ public class DialogManager {
     }
 
     public void  tooShort(){
+        Log.e(TAG, "tooShort: ---" );
         if (mDialog != null && mDialog.isShowing()){
-            iv_icon.setVisibility(View.GONE);
-            iv_voice.setVisibility(View.VISIBLE);
+            Log.e(TAG, "tooShort: ---111" );
+            iv_icon.setVisibility(View.VISIBLE);
+            iv_voice.setVisibility(View.GONE);
 
-            iv_voice.setImageResource(R.mipmap.voice_to_short);
+            iv_icon.setImageResource(R.mipmap.voice_to_short);
             tv.setText("录音时间过短");
         }
     }
@@ -82,6 +87,8 @@ public class DialogManager {
             iv_voice.setVisibility(View.VISIBLE);
 
             int res_id = mContext.getResources().getIdentifier("v" + level,"mipmap",mContext.getPackageName());
+//            Log.e(TAG, "setVoiceLevel: ---" + res_id);
+//            Log.e(TAG, "setVoiceLevel: R.drawable.v1---"+R.drawable.v1 );
             iv_voice.setImageResource(res_id);
         }
     }
