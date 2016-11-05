@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+    <RelativeLayout
+        android:layout_marginTop="20dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/iv_thumb"
+            android:src="@mipmap/icon"
+            android:layout_marginRight="5dp"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_width="40dp"
+            android:layout_height="40dp"/>
+
+        <FrameLayout
+            android:id="@+id/fl"
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@id/iv_thumb"
+            android:layout_marginRight="3dp"
+            android:background="@drawable/chatto_bg_focused"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <View
+                android:id="@+id/record_length"
+                android:layout_gravity="center_vertical|right"
+                android:background="@mipmap/adj"
+                android:layout_width="25dp"
+                android:layout_height="25dp"/>
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/tv_time"
+            android:layout_toLeftOf="@id/fl"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="3dp"
+            android:textColor="#a48f8f"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    </RelativeLayout>
+</RelativeLayout>
